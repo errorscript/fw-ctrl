@@ -2,7 +2,7 @@
 
 This is a Python service for Linux that drives the Framework Laptop's :
 
--  fan speed according to a configurable speed/temp curve
+- fan speed according to a configurable speed/temp curve
 
 - screen brightness according to the illuminance sensor for desktop tha tmiss this functionnality
 
@@ -29,7 +29,7 @@ Led behaviour is by default, green when charging, amber when discharging and und
 
 ### Acknowledment
 
-Fan control and installation script is base upon the [fw-fanctrl]([GitHub - TamtamHero/fw-fanctrl: A simple systemd service to better control Framework Laptop&#39;s fan](https://github.com/TamtamHero/fw-fanctrl)) project made by TamtamHero
+Fan control and installation script is base upon the [fw-fanctrl](https://github.com/TamtamHero/fw-fanctrl) project made by TamtamHero
 
 # Install
 
@@ -76,14 +76,12 @@ fw-ctrl refresh
 
 You can also use the ``fw-ctrlui`` utility called "Framework controller" in the desktop menu.
 
-![ui-general.png](/home/joshua/local/fw-ctrl/ui-general.png)
+![ui-general.png](ui-general.png)
 
-![ui-led.png](/home/joshua/local/fw-ctrl/ui-led.png)
+![ui-led.png](ui-led.png)
 
-![ui-fan.png](/home/joshua/local/fw-ctrl/ui-fan.png)
+![ui-fan.png](ui-fan.png)
 
-![ui-brightness.png](/home/joshua/local/fw-ctrl/ui-brightness.png)
+![ui-brightness.png](ui-brightness.png)
 
-
-
-For more infromation on fan configuration and profile, please report to [fw-fanctrl]([GitHub - TamtamHero/fw-fanctrl: A simple systemd service to better control Framework Laptop&#39;s fan](https://github.com/TamtamHero/fw-fanctrl)) documentation.
+For more infromation on fan configuration and profile, please report to [fw-fanctrl](https://github.com/TamtamHero/fw-fanctrl) documentation.
