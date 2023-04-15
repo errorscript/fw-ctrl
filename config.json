@@ -1,0 +1,268 @@
+{
+    "manager": {
+        "batteryChargingStatusPath": "",
+        "batteryFullChargePath": "",
+        "batteryCurrentChargePath": ""
+    },
+    "led": {
+        "active": true,
+        "defaultColor": "auto",
+        "chargingColor": "green",
+        "powerLevel1": {
+            "level": 10,
+            "color": "amber",
+            "blink": false
+        },
+        "powerLevel2": {
+            "level": 7,
+            "color": "amber",
+            "blink": true
+        }
+    },
+    "fan": {
+        "active": true,
+        "defaultStrategy": "medium",
+        "strategyOnDischarging": "",
+        "strategies": {
+            "sleep": {
+                "fanSpeedUpdateFrequency": 5,
+                "movingAverageInterval": 40,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 0
+                    }
+                ]
+            },
+            "lazyest": {
+                "fanSpeedUpdateFrequency": 5,
+                "movingAverageInterval": 40,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 0
+                    },
+                    {
+                        "temp": 45,
+                        "speed": 0
+                    },
+                    {
+                        "temp": 65,
+                        "speed": 25
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 35
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 50
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "lazy": {
+                "fanSpeedUpdateFrequency": 5,
+                "movingAverageInterval": 30,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 50,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 65,
+                        "speed": 25
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 35
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 50
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "medium": {
+                "fanSpeedUpdateFrequency": 5,
+                "movingAverageInterval": 30,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 60,
+                        "speed": 30
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 40
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 80
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "equilibrate": {
+                "fanSpeedUpdateFrequency": 3,
+                "movingAverageInterval": 30,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 20
+                    },
+                    {
+                        "temp": 60,
+                        "speed": 30
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 50
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 80
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "agile": {
+                "fanSpeedUpdateFrequency": 3,
+                "movingAverageInterval": 15,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 60,
+                        "speed": 30
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 40
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 80
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "very-agile": {
+                "fanSpeedUpdateFrequency": 2,
+                "movingAverageInterval": 5,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 15
+                    },
+                    {
+                        "temp": 60,
+                        "speed": 30
+                    },
+                    {
+                        "temp": 70,
+                        "speed": 40
+                    },
+                    {
+                        "temp": 75,
+                        "speed": 80
+                    },
+                    {
+                        "temp": 85,
+                        "speed": 100
+                    }
+                ]
+            },
+            "deaf": {
+                "fanSpeedUpdateFrequency": 2,
+                "movingAverageInterval": 5,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 20
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 30
+                    },
+                    {
+                        "temp": 50,
+                        "speed": 50
+                    },
+                    {
+                        "temp": 60,
+                        "speed": 100
+                    }
+                ]
+            },
+            "aeolus": {
+                "fanSpeedUpdateFrequency": 2,
+                "movingAverageInterval": 5,
+                "speedCurve": [
+                    {
+                        "temp": 0,
+                        "speed": 20
+                    },
+                    {
+                        "temp": 40,
+                        "speed": 50
+                    },
+                    {
+                        "temp": 65,
+                        "speed": 100
+                    }
+                ]
+            }
+        }
+    },
+    "backlight": {
+        "active": true,
+        "sensitivity": 30,
+        "maxPercent": 50,
+        "stepnumber": 20,
+        "backlightMax": "/sys/class/backlight/intel_backlight/max_brightness",
+        "backlight": "/sys/class/backlight/intel_backlight/brightness",
+        "sensor": "/sys/bus/iio/devices/iio:device0/in_illuminance_raw"
+    }
+}
