@@ -49,12 +49,17 @@ class Controller:
     config = None
     configPath = ""
     active = False
+    section = ""
 
     def __init__(self, path, section):
         self.configPath = path
+        self.section = section
+        self.do_refresh()
+
+    def do_refresh(self):
         with open(self.configPath, "r") as fp:
             self.config = json.load(fp)
-        self.config = self.config[section]
+        self.config = self.config[self.section]
         self.refresh()
 
     def refresh(self):
@@ -142,7 +147,7 @@ class FrameworkManager(Controller):
                 logger.info("Refresh start")
                 self.refresh()
                 for c in self.controllers:
-                    c.refresh()
+                    c.do_refresh()
                 self.need_refresh = False
                 self.force = True
                 logger.info("Refresh end")
@@ -250,11 +255,15 @@ class FanController(Controller):
         Controller.__init__(self, configPath, "fan")
 
     def refresh(self):
+        self.speed = 0
+        self.temps = [0] * 100
+        self.tempIndex = 0
         self.active = self.config["active"]
 
         strategyOnCharging = self.config["defaultStrategy"]
         self.strategyOnCharging = self.config["strategies"][strategyOnCharging]
         # if the user didnt specify a separate strategy for discharging, use the same strategy as for charging
+        logger.info(f"Fan strategy on charging {strategyOnCharging}")
         strategyOnDischarging = self.config["strategyOnDischarging"]
         if strategyOnDischarging == "":
             self.switchableFanCurve = False
@@ -262,6 +271,7 @@ class FanController(Controller):
         else:
             self.strategyOnDischarging = self.config["strategies"][strategyOnDischarging]
             self.switchableFanCurve = True
+            logger.info(f"Fan strategy on discharging {strategyOnDischarging}")
         self.set_strategy(self.strategyOnCharging)
 
     def set_strategy(self, strategy):
