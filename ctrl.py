@@ -85,7 +85,7 @@ class FrameworkManager(Controller):
     batteryChargingStatusPath = ""
     batteryFullChargePath = ""
     batteryCurrentChargePath = ""
-    batteryStatus = False
+    batteryCharging = False
     batteryLevel = 0
     force = False
 
@@ -116,7 +116,7 @@ class FrameworkManager(Controller):
     def get_battery_charging_status(self):
         with open(self.batteryChargingStatusPath, "r") as fb:
             currentBatteryStatus = fb.readline().rstrip("\n")
-            self.batteryStatus = currentBatteryStatus == "Charging"
+            self.batteryCharging = currentBatteryStatus == "Charging"
 
         with open(self.batteryCurrentChargePath, "r") as fb:
             currentBatteryCharge = int(fb.readline().rstrip("\n"))
@@ -166,11 +166,11 @@ class FrameworkManager(Controller):
             else:
                 self.get_battery_charging_status()
                 logger.info(
-                    f"Control with battery : {self.batteryStatus} - {self.batteryLevel}")
+                    f"Control with battery : {self.batteryCharging} - {self.batteryLevel}")
                 for c in self.controllers:
                     if c.active:
                         c.do_control(self.force, BatteryStatus(
-                            self.batteryStatus, self.batteryLevel))
+                            self.batteryCharging, self.batteryLevel))
                     else:
                         c.set_sleep()
                 self.force = False
@@ -369,7 +369,7 @@ class FanController(Controller):
 
     def do_control(self, force, batteryStatus):
         if self.switchableFanCurve:
-            self.switch_strategy(batteryStatus.isCharging)
+            self.switch_strategy(batteryStatus)
         self.update_temperature()
         # update fan speed every "fanSpeedUpdateFrequency" seconds
         if self.tempIndex % self.fanSpeedUpdateFrequency == 0:
