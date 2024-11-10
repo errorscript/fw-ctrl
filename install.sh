@@ -72,7 +72,7 @@ EOF
     echo "Creating service file"
     sudo cat > /etc/systemd/system/${SERVICE_NAME//'"'/}.service << EOF
 [Unit]
-Description=FrameWork Fan Controller
+Description=FrameWork General Controller
 After=multi-user.target
 [Service]
 Type=simple
@@ -89,14 +89,14 @@ EOF
 
     sudo cat > /usr/lib/systemd/system-sleep/fw-ctrl-suspend << EOF
 #!/bin/sh
-
+echo \$1 \$2 >> /tmp/suspend.log
 case \$1 in
     pre)
         ectool led power auto
         ectool autofanctrl
     ;;
     post) 
-        runuser -l $(logname) -c "nohup \"sleep 2 ; fw-ctrl active\""
+        nohup runuser -l $(logname) -c "sleep 2 ; fw-ctrl active"
     ;;
 esac
 

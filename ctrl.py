@@ -8,6 +8,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import logging
 import sys
+import os.path
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,6 +20,11 @@ formatter = logging.Formatter(fmt="%(asctime)s %(name)s.%(levelname)s: %(message
 handler = logging.StreamHandler(stream=sys.stdout)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+TMP_FOLDER = "/tmp/"
+TMP_RES_FILE = TMP_FOLDER + ".fw-ctrl.res.tmp"
+TMP_ACTION_FILE_NAME = ".fw-ctrl.tmp"
+TMP_ACTION_FILE = TMP_FOLDER + TMP_ACTION_FILE_NAME
 
 class FileModifiedHandler(FileSystemEventHandler):
     def __init__(self, path, file_name, callback):
@@ -86,6 +92,7 @@ class FrameworkManager(Controller):
     batteryFullChargePath = ""
     batteryCurrentChargePath = ""
     batteryCharging = False
+    lastBatteryFullCharge= 100
     batteryLevel = 0
     force = False
 
@@ -101,7 +108,7 @@ class FrameworkManager(Controller):
 
         self.refresh()
 
-        FileModifiedHandler("/tmp/", ".fw-ctrl.tmp", self.live_update)
+        FileModifiedHandler(TMP_FOLDER, TMP_ACTION_FILE_NAME, self.live_update)
 
     def refresh(self):
         self.batteryChargingStatusPath = self.get_config(
@@ -124,11 +131,8 @@ class FrameworkManager(Controller):
                 round((currentBatteryCharge / self.lastBatteryFullCharge) * 100, 0))
 
     def live_update(self):
-        with open("/tmp/.fw-ctrl.tmp", "r+") as fp:
+        with open(TMP_ACTION_FILE, "r") as fp:
             value = fp.read()
-            fp.seek(0)
-            fp.truncate
-
             if value == "active":
                 self.sleep = False
                 self.force = True
@@ -138,7 +142,10 @@ class FrameworkManager(Controller):
                 self.need_refresh = True
                 self.sleep = False
             else:
-                fp.write("unknown command")
+                with open(TMP_RES_FILE, "r+") as fp2:
+                    fp2.seek(0)
+                    fp2.truncate()
+                    fp2.write("unknown command")
 
     def run(self):
         previousTs = 0
@@ -214,7 +221,7 @@ class LedController(Controller):
         if self.previousColor != color or force:
             logger.info(f"Set led color to {color}")
             bashCommand = f"ectool led power {color}"
-            r = subprocess.run(bashCommand, stdout=subprocess.PIPE, shell=True)
+            r = subprocess.run(bashCommand, stdout=subprocess.DEVNULL, shell=True)
             if r.returncode != 0:
                 quit(1)
             else:
@@ -250,6 +257,11 @@ class FanController(Controller):
     tempIndex = 0
     switchableFanCurve = False
     lastBatteryStatus = False
+    strategyOnCharging = ""
+    strategyOnDischarging = ""
+    speedCurve = []
+    fanSpeedUpdateFrequency = 5
+    movingAverageInterval = 10
 
     def __init__(self, configPath):
         Controller.__init__(self, configPath, "fan")
@@ -262,7 +274,7 @@ class FanController(Controller):
 
         strategyOnCharging = self.config["defaultStrategy"]
         self.strategyOnCharging = self.config["strategies"][strategyOnCharging]
-        # if the user didnt specify a separate strategy for discharging, use the same strategy as for charging
+        # if the user didn't specify a separate strategy for discharging, use the same strategy as for charging
         logger.info(f"Fan strategy on charging {strategyOnCharging}")
         strategyOnDischarging = self.config["strategyOnDischarging"]
         if strategyOnDischarging == "":
@@ -288,18 +300,20 @@ class FanController(Controller):
             return   # battery charging status hasnt change - dont switch fan curve
         elif currentBatteryStatus != self.lastBatteryStatus:
             self.lastBatteryStatus = currentBatteryStatus
-            if currentBatteryStatus:
-                strategy = self.strategyOnCharging
-            else:
-                strategy = self.strategyOnDischarging
-        # load fan curve according to strategy
-        self.set_strategy(strategy)
+            # load fan curve according to strategy
+            self.set_strategy(self.select_strategy())
+
+    def select_strategy(self):
+        if self.lastBatteryStatus:
+            return self.strategyOnCharging
+        else:
+            return self.strategyOnDischarging
 
     def set_sleep(self):
         if self.speed != 0:
             logger.info(f"Set auto fan")
             bashCommand = f"ectool autofanctrl"
-            r = subprocess.run(bashCommand, stdout=subprocess.PIPE, shell=True)
+            r = subprocess.run(bashCommand, stdout=subprocess.DEVNULL, shell=True)
             if r.returncode != 0:
                 quit(1)
             else:
@@ -309,7 +323,7 @@ class FanController(Controller):
         if abs(self.speed - speed) >= 3 or force:
             logger.info(f"Set fan speed to {speed}")
             bashCommand = f"ectool fanduty {speed}"
-            r = subprocess.run(bashCommand, stdout=subprocess.PIPE, shell=True)
+            r = subprocess.run(bashCommand, stdout=subprocess.DEVNULL, shell=True)
             if r.returncode != 0:
                 quit(1)
             else:
@@ -383,22 +397,26 @@ class BackLightController(Controller):
     currentBacklight = 0
     sensitivity = 0
     maxPercent = 0
-    stepnumber = 0
+    stepNumber = 0
     backlightMax = 0
     backlightMaxPath = ""
     min = 0
     max = 0
-    brsensitivity = 0
+    brSensitivity = 0
+    previousKbValue = 20
+    previousKbStateOff = False
+    keyboard = False
 
     def __init__(self, configPath):
         Controller.__init__(self, configPath, "backlight")
 
     def refresh(self):
         self.active = self.config["active"]
-        
+
+        self.keyboard = self.config["keyboard"]
         self.sensitivity = self.config["sensitivity"]
         self.maxPercent = self.config["maxPercent"]
-        self.stepnumber = self.config["stepnumber"]
+        self.stepNumber = self.config["stepNumber"]
         self.illuminanceSensorPath = self.get_config(
             "sensor", "/sys/bus/iio/devices/iio:device0/in_illuminance_raw")
         self.backlightPath = self.get_config(
@@ -410,7 +428,7 @@ class BackLightController(Controller):
             self.backlightMax = int(fb.readline().rstrip("\n"))
 
         self.min = self.backlightMax / self.sensitivity
-        self.brsensitivity = (self.backlightMax - self.min) / self.sensitivity
+        self.brSensitivity = (self.backlightMax - self.min) / self.sensitivity
         self.max = self.backlightMax * self.maxPercent / 100
 
     def get_illuminance(self):
@@ -425,25 +443,46 @@ class BackLightController(Controller):
         with open(self.backlightPath, "w") as fp:
             fp.write(f"{int(brightness)}")
 
+    def set_kb_brightness(self, setOff):
+        if self.keyboard and self.previousKbStateOff != setOff:
+            setValue = 0
+            if setOff:
+                bashCommand = f"ectool pwmgetkblight"
+                r = subprocess.run(bashCommand, stdout=subprocess.PIPE, shell=True, text=True)
+                self.previousKbValue = int(r.stdout.split("percent: ", 1)[1])
+                logger.info(f"Previous keyboard brightness set to {self.previousKbValue}")
+                logger.info(f"Set keyboard brightness off")
+            else:
+                if self.previousKbValue == 0:
+                    self.previousKbValue = 20
+                setValue = self.previousKbValue
+                logger.info(f"Set keyboard brightness to {setValue}")
+            bashCommand = f"ectool pwmsetkblight {setValue}"
+            h = subprocess.run(bashCommand, stdout=subprocess.DEVNULL, shell=True)
+            self.previousKbStateOff = setOff
+
     def update_brightness(self):
         target = self.currentIlluminance
         if target > self.max:
             target = self.max
+            self.set_kb_brightness(True)
+        else:
+            self.set_kb_brightness(False)
         if target < self.min:
             target = self.min
-        step = (target - self.currentBacklight) / self.stepnumber
+        step = (target - self.currentBacklight) / self.stepNumber
         up = self.currentBacklight
         if step != 0:
-            for c in range(self.stepnumber):
+            for c in range(self.stepNumber):
                 up = up + step
                 self.set_brightness(up)
-                time.sleep(1 / self.stepnumber)
+                time.sleep(1 / self.stepNumber)
 
     def do_control(self, force, batteryStatus):
         self.get_illuminance()
-        if self.currentBacklight > self.currentIlluminance and (self.currentBacklight - self.currentIlluminance) > self.brsensitivity:
+        if self.currentBacklight > self.currentIlluminance and (self.currentBacklight - self.currentIlluminance) > self.brSensitivity:
             self.update_brightness()
-        elif self.currentBacklight < self.currentIlluminance and (self.currentBacklight - self.currentIlluminance) < self.brsensitivity:
+        elif self.currentBacklight < self.currentIlluminance and (self.currentBacklight - self.currentIlluminance) < self.brSensitivity:
             self.update_brightness()
 
 
@@ -461,12 +500,17 @@ def main():
     args = parser.parse_args()
 
     if args.new_command:
-        with open("/tmp/.fw-ctrl.tmp", "w") as fp:
+        with open(TMP_ACTION_FILE, "r+") as fp:
+            fp.seek(0)
+            fp.truncate()
             fp.write(args.new_command)
         time.sleep(0.1)
-        with open("/tmp/.fw-ctrl.tmp", "r") as fp:
-            if fp.read() == "unknown command":
-                logger.info("Error: unknown command")
+        if os.path.isfile(TMP_RES_FILE):
+            with open(TMP_RES_FILE, "r+") as fp:
+                if fp.read() == "unknown command":
+                    logger.info("Error: unknown command")
+                fp.seek(0)
+                fp.truncate()
     else:
         manager = FrameworkManager(args.config)
         manager.run()

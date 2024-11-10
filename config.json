@@ -260,9 +260,10 @@
         "active": true,
         "sensitivity": 30,
         "maxPercent": 50,
-        "stepnumber": 20,
+        "stepNumber": 20,
         "backlightMax": "/sys/class/backlight/intel_backlight/max_brightness",
         "backlight": "/sys/class/backlight/intel_backlight/brightness",
-        "sensor": "/sys/bus/iio/devices/iio:device0/in_illuminance_raw"
+        "sensor": "/sys/bus/iio/devices/iio:device0/in_illuminance_raw",
+        "keyboard": true
     }
 }

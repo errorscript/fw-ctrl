@@ -79,6 +79,7 @@ class PreferenceWindow:
     bcklght_brigthness_path = None
     bcklght_brigthness_max = None
     bcklght_brigthness_sensor = None
+    bcklght_keyboard = None
 
     main_window = None
 
@@ -116,6 +117,7 @@ class PreferenceWindow:
             "bcklght_brigthness_max")
         self.bcklght_brigthness_sensor = builder.get_object(
             "bcklght_brigthness_sensor")
+        self.bcklght_keyboard = builder.get_object("bcklght_keyboard")
         # fill every field
         self.battery_status.set_text(
             controller.config["manager"]["batteryChargingStatusPath"])
@@ -157,13 +159,15 @@ class PreferenceWindow:
         self.bcklght_max.set_value(
             int(controller.config["backlight"]["maxPercent"]))
         self.bcklght_step.set_value(
-            int(controller.config["backlight"]["stepnumber"]))
+            int(controller.config["backlight"]["stepNumber"]))
         self.bcklght_brigthness_sensor.set_text(
             controller.config["backlight"]["sensor"])
         self.bcklght_brigthness_path.set_text(
             controller.config["backlight"]["backlight"])
         self.bcklght_brigthness_max.set_text(
             controller.config["backlight"]["backlightMax"])
+        self.bcklght_keyboard.set_active(
+            controller.config["backlight"]["keyboard"])
         builder.connect_signals(self)
         self.main_window = builder.get_object("window_main")
         self.main_window.connect("delete-event", self.on_close)
@@ -211,7 +215,7 @@ class PreferenceWindow:
         controller.config["backlight"]["active"] = self.bcklght_active.get_active()
         controller.config["backlight"]["maxPercent"] = self.bcklght_max.get_value_as_int(
         )
-        controller.config["backlight"]["stepnumber"] = self.bcklght_step.get_value_as_int(
+        controller.config["backlight"]["stepNumber"] = self.bcklght_step.get_value_as_int(
         )
         controller.config["backlight"]["sensor"] = clean_text(
             self.bcklght_brigthness_sensor.get_text())
@@ -219,6 +223,7 @@ class PreferenceWindow:
             self.bcklght_brigthness_path.get_text())
         controller.config["backlight"]["backlightMax"] = clean_text(
             self.bcklght_brigthness_max.get_text())
+        controller.config["backlight"]["keyboard"] = self.bcklght_keyboard.get_active()
 
         controller.save_config()
         controller.close()
